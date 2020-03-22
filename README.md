@@ -19,3 +19,23 @@ If there is a problem displaying the plot in Ubuntu, the following may help:
     sudo apt install python3-tk
 
 ![COVID-19 cases 2020-03-22](./cases-2020-03-22.png)
+
+
+ECDC Data Format
+----------------
+
+The ECDC data is in a spreadsheet in this format. Data is grouped by
+country in reverse date order. The column "Countries and territories"
+is unsuitable for grouping because of inconsistent capitalization
+("CANADA" and "Canada").
+
+| DateRep    | Day | Month | Year | Cases | Deaths | Countries and territories | GeoId |
+|------------|-----|-------|------|-------|--------|---------------------------|-------|
+| 2020-03-20 | 20  | 3     | 2020 | 0     | 0      | Afghanistan               | AF    |
+| 2020-03-19 | 19  | 3     | 2020 | 0     | 0      | Afghanistan               | AF    |
+| 2020-03-18 | 18  | 3     | 2020 | 1     | 0      | Afghanistan               | AF    |
+| 2020-03-17 | 17  | 3     | 2020 | 5     | 0      | Afghanistan               | AF    |
+| ...        |     |       |      |       |        |                           |       |
+| 2019-12-31 | 31  | 12    | 2019 | 0     | 0      | Vietnam                   | VN    |
+| 2020-03-20 | 20  | 3     | 2020 | 0     | 0      | Zambia                    | ZM    |
+| 2020-03-19 | 19  | 3     | 2020 | 2     | 0      | Zambia                    | ZM    |
