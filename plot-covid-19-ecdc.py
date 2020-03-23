@@ -5,6 +5,7 @@ import math
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter, LogLocator
+import numpy as np
 import pandas as pd
 import sys
 
@@ -44,9 +45,10 @@ for country, group in df.groupby('GeoId'):
 countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
 # countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH']
 
-# Remove extra China data
-max_x = min(len(country_dict['KR']) + 5,
-            max(len(country_dict[c]) for c in countries))
+# Limit to 5 days past the second longest (for China)
+counts = np.array([len(country_dict[c]) for c in countries])
+counts.partition(len(counts) - 1)
+max_x = min(counts[-2] + 5, counts[-1])
 max_y = max(country_dict[c].iloc[-1]['cum'] for c in countries)
 
 fig, ax = plt.subplots()
