@@ -1,0 +1,31 @@
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.grid line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+}
+
+.grid path {
+    stroke-width: 0;
+}
+
+.legend line,
+.line {
+    fill: none;
+    stroke-width: 0.75px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+.legend line {
+    stroke-width: 1.5px;
+}
+
+text {
+    font: 10px sans-serif;
+}

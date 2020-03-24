@@ -18,6 +18,15 @@ locally display the chart.
 ![Matplotlib](./matplotlib/matplotlib.png)
 
 
+D3
+--
+
+The [JavaScript D3 version](./d3/) runs in a web browser.
+
+![D3](./d3/d3.png)
+
+
+
 ECDC Data Format
 ----------------
 
