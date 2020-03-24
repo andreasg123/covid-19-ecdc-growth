@@ -26,7 +26,7 @@ df = pd.read_excel(path)
 column = 'Cases'
 # Uncomment the following line to plot deaths (should be made into a
 # command-line option).
-column = 'Deaths'
+# column = 'Deaths'
 chart_title = 'Coronavirus Total ' + column
 
 min_y = 100 if column == 'Cases' else 10
