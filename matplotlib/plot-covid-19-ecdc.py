@@ -26,9 +26,11 @@ df = pd.read_excel(path)
 column = 'Cases'
 # Uncomment the following line to plot deaths (should be made into a
 # command-line option).
-# column = 'Deaths'
+column = 'Deaths'
+chart_title = 'Coronavirus Total ' + column
 
 min_y = 100 if column == 'Cases' else 10
+
 
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
@@ -77,6 +79,7 @@ for country in countries:
      print(country, df2.iloc[-1]['cum'])
 
 
+plt.title(chart_title)
 ax.legend(loc='lower right')
 plt.xlim(left=0)
 plt.ylim(bottom=min_y)
