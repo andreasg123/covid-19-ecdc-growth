@@ -5,6 +5,7 @@ import math
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter, LogLocator
+from matplotlib.font_manager import FontProperties
 import numpy as np
 import pandas as pd
 import sys
@@ -19,16 +20,20 @@ import sys
 # pass the local file name on the command line:
 # wget https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
 
-path = sys.argv[1] if len(sys.argv) > 1 else 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + datetime.date.today().isoformat() + '.xlsx'
+column = 'Cases'
+
+# Argument handling
+arg = 1
+option = sys.argv[arg] if len(sys.argv) > arg else ''
+if option == '-d' or option == '-deaths' :
+     column = 'Deaths'
+     arg = 2
+path = sys.argv[arg] if len(sys.argv) > arg else 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + datetime.date.today().isoformat() + '.xlsx'
 
 df = pd.read_excel(path)
 
-column = 'Cases'
-# Uncomment the following line to plot deaths (should be made into a
-# command-line option).
-# column = 'Deaths'
-
 min_y = 100 if column == 'Cases' else 10
+
 
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
@@ -76,7 +81,12 @@ for country in countries:
              label=country, lw=0.75, marker='.', ms=4)
      print(country, df2.iloc[-1]['cum'])
 
-
+chart_title = 'Coronavirus Total ' + column
+chart_source = 'Source: ' + path
+plt.title(chart_title)
+font = FontProperties()
+font.set_size('x-small')
+plt.figtext(0.99, 0.01, chart_source, fontproperties=font, horizontalalignment='right')
 ax.legend(loc='lower right')
 plt.xlim(left=0)
 plt.ylim(bottom=min_y)
