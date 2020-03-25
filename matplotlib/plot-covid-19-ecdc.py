@@ -34,7 +34,6 @@ df = pd.read_excel(path)
 
 min_y = 100 if column == 'Cases' else 10
 
-
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
 # inconsistent capitalization ('CANADA' and 'Canada').
@@ -46,9 +45,7 @@ for country, group in df.groupby('GeoId'):
      if len(df2) > 1:
           country_dict[country] = df2[['DateRep', 'cum']]
 
-
 countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
-# countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH']
 
 # Limit to 5 days past the second longest (for China)
 counts = np.array([len(country_dict[c]) for c in countries])
@@ -81,6 +78,10 @@ for country in countries:
              label=country, lw=0.75, marker='.', ms=4)
      print(country, df2.iloc[-1]['cum'])
 
+# change window and default file name to something else than figure 1:
+f = plt.gcf()
+f.canvas.set_window_title('covid-19-' + column.lower() + '-ecdc')
+
 chart_title = 'Coronavirus Total ' + column
 chart_source = 'Source: ' + path
 plt.title(chart_title)
@@ -90,4 +91,5 @@ plt.figtext(0.99, 0.01, chart_source, fontproperties=font, horizontalalignment='
 ax.legend(loc='lower right')
 plt.xlim(left=0)
 plt.ylim(bottom=min_y)
+
 plt.show()
