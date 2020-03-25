@@ -46,6 +46,7 @@ for country, group in df.groupby('GeoId'):
           country_dict[country] = df2[['DateRep', 'cum']]
 
 countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
+# countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH']
 
 # Limit to 5 days past the second longest (for China)
 counts = np.array([len(country_dict[c]) for c in countries])
@@ -91,5 +92,4 @@ plt.figtext(0.99, 0.01, chart_source, fontproperties=font, horizontalalignment='
 ax.legend(loc='lower right')
 plt.xlim(left=0)
 plt.ylim(bottom=min_y)
-
 plt.show()
