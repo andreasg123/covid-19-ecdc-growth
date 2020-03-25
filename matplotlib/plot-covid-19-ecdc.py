@@ -34,7 +34,6 @@ df = pd.read_excel(path)
 
 min_y = 100 if column == 'Cases' else 10
 
-
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
 # inconsistent capitalization ('CANADA' and 'Canada').
@@ -45,7 +44,6 @@ for country, group in df.groupby('GeoId'):
      df2 = df2.loc[df2['cum'] >= min_y]
      if len(df2) > 1:
           country_dict[country] = df2[['DateRep', 'cum']]
-
 
 countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
 # countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH']
@@ -80,6 +78,10 @@ for country in countries:
      ax.plot(range(c), df2['cum'][:c],
              label=country, lw=0.75, marker='.', ms=4)
      print(country, df2.iloc[-1]['cum'])
+
+# change window and default file name to something else than figure 1:
+f = plt.gcf()
+f.canvas.set_window_title('covid-19-' + column.lower() + '-ecdc')
 
 chart_title = 'Coronavirus Total ' + column
 chart_source = 'Source: ' + path
