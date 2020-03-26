@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from datetime import datetime, timedelta
+import datetime
 import math
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
@@ -19,28 +19,33 @@ import sys
 # To avoid downloading the data for every run, run this once per day and then
 # pass the local file name on the command line, e.g.:
 # wget https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
-# py plot-covid-19-ecdc.py COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
+# python plot-covid-19-ecdc.py COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
 
 # Defaults:
 column = 'Cases'
-date = datetime.today().date()
+date = datetime.date.today()
+
+
+def url_for_date(date):
+     return 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
+
 
 # Argument handling
 arg = 1
 option = sys.argv[arg] if len(sys.argv) > arg else ''
-if option == '-d' or option == '-deaths' :
+if option == '-d' or option == '--deaths':
      column = 'Deaths'
      arg = 2
-    
-path = sys.argv[arg] if len(sys.argv) > arg else 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
+
+path = sys.argv[arg] if len(sys.argv) > arg else url_for_date(date)
 
 # Handle case where data for today is not available yet, try to use data from yesterday
 try:
      df = pd.read_excel(path)
 except:
-     print('Data not found yet, trying to use data from previous day.')
-     date = date-timedelta(days=1)
-     path = 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
+     print('Data not yet available, trying the previous day.')
+     date -= datetime.timedelta(days=1)
+     path = url_for_date(date)
      df = pd.read_excel(path)
 
 min_y = 100 if column == 'Cases' else 10
