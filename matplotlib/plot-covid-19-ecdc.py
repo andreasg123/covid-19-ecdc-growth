@@ -32,7 +32,8 @@ population = {
 }
 
 countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
-countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH', 'HU', 'IN', 'UK', 'IS', 'CN', 'KR', 'JP', 'AT', 'SE']
+countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH', 'HU', 'IN', 'UK', 'IS',  'JP', 'AT', 'SE']
+countries = ['ES', 'IT', 'DE']
 
 # Plots the growth in COVID-19 cases or deaths from the day each country
 # reached 100 cases or 10 deaths, respectively.
@@ -48,6 +49,7 @@ countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH', 'HU', 'IN', 'UK', 'IS', 'CN', '
 # Defaults:
 normalize = False
 start = False
+timestamp = False
 report_cases = True
 date = datetime.date.today()
 print(date)
@@ -91,10 +93,26 @@ try:
      df = pd.read_excel(path)
 except:
      print(path + ' not found.')
-     datebefore = date-timedelta(days=1)
-     path = url_for_date(datebefore)
+     date -= datetime.timedelta(days=1)
+     path = url_for_date(date)
      print('Trying: ' + path)
      df = pd.read_excel(path)
+
+if normalize:
+     min_y = 1 if report_cases else 1
+else:
+     min_y = 100 if report_cases else 10
+min_y = provided_min_y if start else min_y
+
+print('Start value: ', min_y)
+
+# Format change on 2020-03-27
+group_by = 'geoId' if 'geoId' in df.keys() else 'GeoId'
+if report_cases:
+     column = 'cases' if 'cases' in df.keys() else 'Cases'
+else:
+     column = 'deaths' if 'deaths' in df.keys() else 'Deaths'
+date_column = 'dateRep' if 'dateRep' in df.keys() else 'DateRep'
 
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
