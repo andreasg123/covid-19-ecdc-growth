@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from datetime import datetime, timedelta
+import datetime
 import math
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
@@ -43,15 +43,20 @@ countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH', 'HU', 'IN', 'UK', 'IS', 'CN', '
 # To avoid downloading the data for every run, run this once per day and then
 # pass the local file name on the command line, e.g.:
 # wget https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
-# py plot-covid-19-ecdc.py COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
+# python plot-covid-19-ecdc.py COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
 
 # Defaults:
 normalize = False
 start = False
-column = 'Cases'
-date = datetime.today().date()
+report_cases = True
+date = datetime.date.today()
 print(date)
-path = 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
+
+def url_for_date(date):
+     return 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
+
+path = url_for_date(date)
+
 
 # Argument handling
 arg = 0
@@ -64,7 +69,7 @@ for option in sys.argv:
           nextarg = nextarg + 1
           #option = sys.argv[arg] if len(sys.argv) > arg else ''
           if option == '-d' or option == '-deaths':
-               column = 'Deaths'
+               report_cases = False
           elif option == '-n' or option == '-normalize':
                normalize = True
                print('Normalize data.')
@@ -81,39 +86,28 @@ for option in sys.argv:
                path = option
      arg = arg + 1
      
-
-     
-
 # Handle case where data for today is not available yet, try to use data from yesterday
 try:
      df = pd.read_excel(path)
 except:
      print(path + ' not found.')
      datebefore = date-timedelta(days=1)
-     path = 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + datebefore.isoformat() + '.xlsx'
+     path = url_for_date(datebefore)
      print('Trying: ' + path)
      df = pd.read_excel(path)
-
-if normalize:
-     min_y = 1 if column == 'Cases' else 1
-else:
-     min_y = 100 if column == 'Cases' else 10
-min_y = provided_min_y if start else min_y
-
-print('Start value: ', min_y)
 
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
 # inconsistent capitalization ('CANADA' and 'Canada').
-for country, group in df.groupby('GeoId'):
+for country, group in df.groupby(group_by):
      if country in countries:
           # Reverse the time order for each group
-          df2 = group.iloc[::-1][['DateRep', column]]
+          df2 = group.iloc[::-1][[date_column, column]]
           value = df2[column].cumsum() * (1000000 / population[country] if normalize else 1) 
           df2['cum'] = value
           df2 = df2.loc[df2['cum'] >= min_y]
           if len(df2) > 1:
-               country_dict[country] = df2[['DateRep', 'cum']]
+               country_dict[country] = df2[[date_column, 'cum']]
           else:
                print('Country', country, 'has too low value, ignored.')
 
