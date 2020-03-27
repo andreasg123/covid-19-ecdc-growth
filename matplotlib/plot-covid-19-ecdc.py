@@ -10,6 +10,30 @@ import numpy as np
 import pandas as pd
 import sys
 
+# Globals
+
+population = {
+   'SE': 10099265,
+   'AT': 9006398,
+   'US': 331002651,
+   'DE': 83783942, 
+   'IT': 60461826, 
+   'FR': 65273511, 
+   'ES': 46754778, 
+   'CN': 1439323776, 
+   'KR': 51269185, 
+   'JP': 126476461,
+   'CH': 8654622,
+   'TK': 84339067,
+   'HU': 9660351,
+   'IN': 1380004385,
+   'IS': 341243,
+   'UK': 67886011
+}
+
+countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
+countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH', 'HU', 'IN', 'UK', 'IS', 'CN', 'KR', 'JP', 'AT', 'SE']
+
 # Plots the growth in COVID-19 cases or deaths from the day each country
 # reached 100 cases or 10 deaths, respectively.
 
@@ -22,48 +46,82 @@ import sys
 # py plot-covid-19-ecdc.py COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
 
 # Defaults:
+normalize = False
+start = False
 column = 'Cases'
 date = datetime.today().date()
+print(date)
+path = 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
 
 # Argument handling
-arg = 1
-option = sys.argv[arg] if len(sys.argv) > arg else ''
-if option == '-d' or option == '-deaths' :
-     column = 'Deaths'
-     arg = 2
-    
-path = sys.argv[arg] if len(sys.argv) > arg else 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
+arg = 0
+nextarg = 1
+#print(len(sys.argv))
+for option in sys.argv:
+     #print(arg)
+     #print(option)
+     if arg>=nextarg:
+          nextarg = nextarg + 1
+          #option = sys.argv[arg] if len(sys.argv) > arg else ''
+          if option == '-d' or option == '-deaths':
+               column = 'Deaths'
+          elif option == '-n' or option == '-normalize':
+               normalize = True
+               print('Normalize data.')
+          elif option == '-s' or option == '-start':
+               start = True if len(sys.argv) > arg+1 else False
+               if start:
+                    provided_min_y = float(sys.argv[arg+1])
+                    nextarg = nextarg + 1
+          elif option == '-t' or option == '-timestamp':
+               timestamp = True
+          elif option.startswith('-'):
+               sys.exit('Usage: py plot-covid-19-ecdc.py [-d|-deaths] [-n|-normalize] [-s|-start <startvalue>] [<url>|<filename>]')
+          else:
+               path = option
+     arg = arg + 1
+     
+
+     
 
 # Handle case where data for today is not available yet, try to use data from yesterday
 try:
      df = pd.read_excel(path)
 except:
-     print('Data not found yet, trying to use data from previous day.')
-     date = date-timedelta(days=1)
-     path = 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
+     print(path + ' not found.')
+     datebefore = date-timedelta(days=1)
+     path = 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + datebefore.isoformat() + '.xlsx'
+     print('Trying: ' + path)
      df = pd.read_excel(path)
 
-min_y = 100 if column == 'Cases' else 10
+if normalize:
+     min_y = 1 if column == 'Cases' else 1
+else:
+     min_y = 100 if column == 'Cases' else 10
+min_y = provided_min_y if start else min_y
+
+print('Start value: ', min_y)
 
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
 # inconsistent capitalization ('CANADA' and 'Canada').
 for country, group in df.groupby('GeoId'):
-     # Reverse the time order for each group
-     df2 = group.iloc[::-1][['DateRep', column]]
-     df2['cum'] = df2[column].cumsum()
-     df2 = df2.loc[df2['cum'] >= min_y]
-     if len(df2) > 1:
-          country_dict[country] = df2[['DateRep', 'cum']]
-
-countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
-# countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH']
+     if country in countries:
+          # Reverse the time order for each group
+          df2 = group.iloc[::-1][['DateRep', column]]
+          value = df2[column].cumsum() * (1000000 / population[country] if normalize else 1) 
+          df2['cum'] = value
+          df2 = df2.loc[df2['cum'] >= min_y]
+          if len(df2) > 1:
+               country_dict[country] = df2[['DateRep', 'cum']]
+          else:
+               print('Country', country, 'has too low value, ignored.')
 
 # Limit to 5 days past the second longest (for China)
-counts = np.array([len(country_dict[c]) for c in countries])
+counts = np.array([len(country_dict[c]) for c in country_dict])
 counts.partition(len(counts) - 1)
 max_x = min(counts[-2] + 5, counts[-1])
-max_y = max(country_dict[c].iloc[-1]['cum'] for c in countries)
+max_y = max(country_dict[c].iloc[-1]['cum'] for c in country_dict)
 
 fig, ax = plt.subplots()
 plt.yscale('log')
@@ -83,7 +141,7 @@ for d in range(1, 8):
                                c='#666', ls='dotted', lw=0.75))
 
 # Plot the selected countries and print the total for each country.
-for country in countries:
+for country in country_dict:
      df2 = country_dict[country]
      c = min(max_x, len(df2))
      ax.plot(range(c), df2['cum'][:c],
@@ -92,9 +150,10 @@ for country in countries:
 
 # change window and default file name to something else than figure 1:
 f = plt.gcf()
-f.canvas.set_window_title('covid-19-' + column.lower() + '-ecdc')
+window_title = 'covid-19-' + column.lower() + '-ecdc' + ('-normalized' if normalize else '') + ('-' + str(date) if timestamp else '')
+f.canvas.set_window_title(window_title)
 
-chart_title = 'Coronavirus Total ' + column
+chart_title = 'Coronavirus Total ' + column + (' Normalized (per Mio. Population)' if normalize else '')
 chart_source = 'Source: ' + path
 plt.title(chart_title)
 font = FontProperties()
