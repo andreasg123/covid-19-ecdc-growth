@@ -22,7 +22,7 @@ import sys
 # python plot-covid-19-ecdc.py COVID-19-geographic-disbtribution-worldwide-2020-03-22.xlsx
 
 # Defaults:
-column = 'Cases'
+report_cases = True
 date = datetime.date.today()
 
 
@@ -34,7 +34,7 @@ def url_for_date(date):
 arg = 1
 option = sys.argv[arg] if len(sys.argv) > arg else ''
 if option == '-d' or option == '--deaths':
-     column = 'Deaths'
+     report_cases = False
      arg = 2
 
 path = sys.argv[arg] if len(sys.argv) > arg else url_for_date(date)
@@ -48,18 +48,26 @@ except:
      path = url_for_date(date)
      df = pd.read_excel(path)
 
-min_y = 100 if column == 'Cases' else 10
+min_y = 100 if report_cases else 10
+
+# Format change on 2020-03-27
+group_by = 'geoId' if 'geoId' in df.keys() else 'GeoId'
+if report_cases:
+     column = 'cases' if 'cases' in df.keys() else 'Cases'
+else:
+     column = 'deaths' if 'deaths' in df.keys() else 'Deaths'
+date_column = 'dateRep' if 'dateRep' in df.keys() else 'DateRep'
 
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
 # inconsistent capitalization ('CANADA' and 'Canada').
-for country, group in df.groupby('GeoId'):
+for country, group in df.groupby(group_by):
      # Reverse the time order for each group
-     df2 = group.iloc[::-1][['DateRep', column]]
+     df2 = group.iloc[::-1][[date_column, column]]
      df2['cum'] = df2[column].cumsum()
      df2 = df2.loc[df2['cum'] >= min_y]
      if len(df2) > 1:
-          country_dict[country] = df2[['DateRep', 'cum']]
+          country_dict[country] = df2[[date_column, 'cum']]
 
 countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
 # countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH']

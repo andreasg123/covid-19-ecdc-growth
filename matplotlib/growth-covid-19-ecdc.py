@@ -15,25 +15,32 @@ path = sys.argv[1] if len(sys.argv) > 1 else 'https://www.ecdc.europa.eu/sites/d
 
 df = pd.read_excel(path)
 
-column = 'Cases'
-# column = 'Deaths'
+report_cases = True
+
+# Format change on 2020-03-27
+group_by = 'geoId' if 'geoId' in df.keys() else 'GeoId'
+if report_cases:
+     column = 'cases' if 'cases' in df.keys() else 'Cases'
+else:
+     column = 'deaths' if 'deaths' in df.keys() else 'Deaths'
+date_column = 'dateRep' if 'dateRep' in df.keys() else 'DateRep'
 
 # Threshold for including a country
-threshold = 500 if column == 'Cases' else 20
+threshold = 500 if report_cases else 20
 
 # Number of days to include.
 ndays = 5
 rows = []
-for country, group in df.groupby('GeoId'):
+for country, group in df.groupby(group_by):
      # Reverse the time order for each group
-     df2 = group.iloc[::-1][['DateRep', column]]
+     df2 = group.iloc[::-1][[date_column, column]]
      df2['cum'] = df2[column].cumsum()
      # Exclude the Diamond Princess
      if country == 'JPG11668':
           continue
      if len(df2) < ndays or df2.iloc[-ndays]['cum'] == 0 or df2.iloc[-1]['cum'] < threshold:
           continue
-     header = ['ID'] + [t.strftime('%m/%d') for t in df2.iloc[-ndays:]['DateRep']] + ['Daily']
+     header = ['ID'] + [t.strftime('%m/%d') for t in df2.iloc[-ndays:][date_column]] + ['Daily']
      x = np.arange(ndays)
      y = np.log(df2.iloc[-ndays:]['cum'])
      slope, _, _, _, _ = stats.linregress(x, y)

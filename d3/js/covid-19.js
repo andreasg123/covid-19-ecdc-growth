@@ -133,12 +133,12 @@ function iso(year, month, day) {
   return year + '-' + [month, day].map(x => String(x).padStart(2, '0')).join('-');
 }
 
-function selectCountries(data, key, min_y, countries) {
+function selectCountries(data, keys, min_y, countries) {
   const groups = data.reduce((map, row) => {
-    const geo = row.GeoId;
+    const geo = row[keys[0]];
     if (countries.indexOf(geo) >= 0) {
       const g = map.get(geo) || [];
-      g.push([iso(row.Year, row.Month, row.Day), row[key]]);
+      g.push([iso(row[keys[1]], row[keys[2]], row[keys[3]]), row[keys[4]]]);
       map.set(geo, g);
     }
     return map;
@@ -170,16 +170,21 @@ function selectCountries(data, key, min_y, countries) {
 
 async function loadData(key) {
   // Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://www.ecdc.europa.eu/...xlsx. (Reason: CORS header 'Access-Control-Allow-Origin' missing).
-  // const url = 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-03-24.xlsx';
-  const url = 'COVID-19-geographic-disbtribution-worldwide-2020-03-24.xlsx';
+  // const url = 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-03-27.xlsx';
+  const url = 'COVID-19-geographic-disbtribution-worldwide-2020-03-27.xlsx';
   const data = await makeXHR({url, responseType: 'arraybuffer'});
   // The ECDC data is in Excel format, use XLSX to read.
   const book = XLSX.read(data, {type: 'array'});
   const sheet = book.Sheets[book.SheetNames[0]];
   // Specify 'Cases' or 'Deaths' to plot the respective property.
-  key = key && key.toLowerCase() === 'deaths' ? 'Deaths' : 'Cases';
-  const min_y = key === 'Cases' ? 100 : 10;
-  plotData(selectCountries(XLSX.utils.sheet_to_json(sheet), key, min_y,
+  const report_cases = !(key && key.toLowerCase() === 'deaths');
+  const min_y = report_cases ? 100 : 10;
+  const json = XLSX.utils.sheet_to_json(sheet);
+  // Format change on 2020-03-27
+  const keys = 'geoId' in json[0] ?
+        ['geoId', 'year', 'month', 'day', report_cases ? 'cases' : 'deaths'] :
+        ['GeoId', 'Year', 'Month', 'Day', report_cases ? 'Cases' : 'Deaths'];
+  plotData(selectCountries(json, keys, min_y,
                            ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']),
            min_y);
 }
