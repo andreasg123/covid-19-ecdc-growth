@@ -12,28 +12,9 @@ import sys
 
 # Globals
 
-population = {
-   'SE': 10099265,
-   'AT': 9006398,
-   'US': 331002651,
-   'DE': 83783942, 
-   'IT': 60461826, 
-   'FR': 65273511, 
-   'ES': 46754778, 
-   'CN': 1439323776, 
-   'KR': 51269185, 
-   'JP': 126476461,
-   'CH': 8654622,
-   'TK': 84339067,
-   'HU': 9660351,
-   'IN': 1380004385,
-   'IS': 341243,
-   'UK': 67886011
-}
-
 countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CN', 'KR', 'JP']
 countries = ['US', 'DE', 'IT', 'FR', 'ES', 'CH', 'HU', 'IN', 'UK', 'IS',  'JP', 'AT', 'SE']
-countries = ['ES', 'IT', 'DE']
+#countries = ['FR', 'ES', 'IT', 'DE', 'US', 'AT', 'CN', 'KR', 'JP']
 
 # Plots the growth in COVID-19 cases or deaths from the day each country
 # reached 100 cases or 10 deaths, respectively.
@@ -113,6 +94,7 @@ if report_cases:
 else:
      column = 'deaths' if 'deaths' in df.keys() else 'Deaths'
 date_column = 'dateRep' if 'dateRep' in df.keys() else 'DateRep'
+population_column = 'popData2018' if 'popData2018' in df.keys() else 'PopData2018'
 
 country_dict = {}
 # Group by 'GeoId' and not "Countries and territories" because the latter has
@@ -120,14 +102,14 @@ country_dict = {}
 for country, group in df.groupby(group_by):
      if country in countries:
           # Reverse the time order for each group
-          df2 = group.iloc[::-1][[date_column, column]]
-          value = df2[column].cumsum() * (1000000 / population[country] if normalize else 1) 
+          df2 = group.iloc[::-1][[date_column, column, population_column]]
+          value = df2[column].cumsum() * (1000000 / df2[population_column] if normalize else 1) 
           df2['cum'] = value
           df2 = df2.loc[df2['cum'] >= min_y]
           if len(df2) > 1:
                country_dict[country] = df2[[date_column, 'cum']]
           else:
-               print('Country', country, 'has too low value, ignored.')
+               print('Country', country, 'has too low a value, ignored.')
 
 # Limit to 5 days past the second longest (for China)
 counts = np.array([len(country_dict[c]) for c in country_dict])
