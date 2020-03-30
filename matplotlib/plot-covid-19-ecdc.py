@@ -10,6 +10,7 @@ from matplotlib.font_manager import FontProperties
 import numpy as np
 import pandas as pd
 import sys
+from urllib.error import HTTPError
 
 # Globals
 
@@ -39,6 +40,7 @@ ap.add_argument('-t', '--timestamp', action='store_true',
                 help='add timestamp to file name')
 args = ap.parse_args()
 
+
 def url_for_date(date):
     return 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
 
@@ -53,9 +55,7 @@ path = args.path or url_for_date(date)
 # from yesterday
 try:
     df = pd.read_excel(path)
-except FileNotFoundError:
-    if args.path:
-        raise
+except HTTPError:
     print(path + ' not found.')
     date -= datetime.timedelta(days=1)
     path = url_for_date(date)
