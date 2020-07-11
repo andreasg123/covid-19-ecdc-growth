@@ -41,31 +41,22 @@ ap.add_argument('-t', '--timestamp', action='store_true',
 args = ap.parse_args()
 
 
-def url_for_date(date):
-    return 'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-' + date.isoformat() + '.xlsx'
-
-
 normalize = args.normalize
 timestamp = args.timestamp
 report_cases = not args.deaths
 date = datetime.date.today()
-path = args.path or url_for_date(date)
+path = args.path or 'https://opendata.ecdc.europa.eu/covid19/casedistribution/csv'
 
-# Handle case where data for today is not available yet, try to use data
-# from yesterday
-try:
-    df = pd.read_excel(path)
-except HTTPError:
-    print(path + ' not found.')
-    date -= datetime.timedelta(days=1)
-    path = url_for_date(date)
-    print('Trying: ' + path)
-    df = pd.read_excel(path)
+# 2020-07-11: Neither xlrd (used by Pandas) nor openpyxl can read the Excel file
+# anymore.  openpyxl complains about a missing ID for the sheet.
+# Switching to CSV.
+df = pd.read_csv(path)
 
+# Switched to CSV on 2020-07-11: "popData2019" instead of "popData2018"
 # Format change on 2020-03-27
 if 'geoId' in df.keys():
     columns = ['geoId', 'dateRep', 'cases' if report_cases else 'deaths',
-               'popData2018']
+               'popData2019']
 else:
     columns = ['GeoId', 'DateRep', 'Cases' if report_cases else 'Deaths']
     # No population data available
